@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<style>
+    body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        flex-direction: column;
+    }
+
+    .title {
+        position: absolute;
+        top: 20px; /* 위치 조정 */
+        font-size: 2em; /* 글자 크기 조정 */
+        text-align: center; /* 중앙 정렬 */
+    }
+
+    .subtitle {
+        position: absolute;
+        top: 100px; /* 위치 조정 */
+        text-align: center; /* 중앙 정렬 */
+    }
+
+    #webcam-container {
+        position: relative;
+    }
+
+    #label-container {
+    position: absolute;
+    right: 280px; /* 위치를 오른쪽으로 이동 */
+    top: 50%;
+    transform: translateY(-50%);
+    overflow: auto; 
+    word-break: break-word; /* 단어 단위로 줄바꿈 */
+    width: 250px; /* 너비 설정 */
+    height: 200px; /* 높이 설정 */
+    }  
+    button {
+        background-color: #4c74af;
+        color: white;
+        padding: 15px 32px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        margin: 4px 2px;
+        cursor: pointer;
+        border-radius: 12px;
+    }
+</style>
+
+<body>
+    <div class="title">제곽 운동 봇</div>
+    <div class="subtitle">우리 몸을 평가해봐요</div>
+    <button type="button" onclick="init()">Start</button>
+    <div id="webcam-container"></div>
+    <div id="label-container"></div>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+<script type="text/javascript">
+    // More API functions here:
+    // https://github.com/googlecreativelab/teachablemachine-community/tree/master/libraries/image
+
+    // the link to your model provided by Teachable Machine export panel
+    const URL = "https://teachablemachine.withgoogle.com/models/BKulQEF74/";
+
+    let model, webcam, labelContainer, maxPredictions;
+    const data =  {
+        "Class 1":{
+            "name": "상위 1퍼센트 팔",
+            "subject": "제가 알려드릴 수준이 아닙니다^^"
+            
+        },
+        "Class 3" :{
+            "name": "운동을 요하는 팔",
+            "subject": "바벨컬(Barbell Curls),바벨컬(Barbell Curls),딥스(Dips), 프레스 다운(Press Down)"
+        },
+        "Class 2" :{
+            "name": "운동을 하면 좋은 팔",
+            "subject": "바벨컬(Barbell Curls),바벨컬(Barbell Curls)"
+        }
+    };
+
+
+    // Load the image model and setup the webcam
+    async function init() {
+        const modelURL = URL + "model.json";
+        const metadataURL = URL + "metadata.json";
+
+        // load the model and metadata
+        // Refer to tmImage.loadFromFiles() in the API to support files from a file picker
+        // or files from your local hard drive
+        // Note: the pose library adds "tmImage" object to your window (window.tmImage)
+        model = await tmImage.load(modelURL, metadataURL);
+        maxPredictions = model.getTotalClasses();
+
+        // Convenience function to setup a webcam
+        const flip = true; // whether to flip the webcam
+        webcam = new tmImage.Webcam(300, 300, flip); // width, height, flip
+        await webcam.setup(); // request access to the webcam
+        await webcam.play();
+        window.requestAnimationFrame(loop);
+
+        // append elements to the DOM
+        document.getElementById("webcam-container").appendChild(webcam.canvas);
+        labelContainer = document.getElementById("label-container");
+        for (let i = 0; i < maxPredictions; i++) { // and class labels
+            labelContainer.appendChild(document.createElement("div"));
+        }
+    }
+
+    async function loop() {
+        webcam.update(); // update the webcam frame
+        await predict();
+        window.requestAnimationFrame(loop);
+    }
+
+    // run the webcam image through the image model
+    async function predict() {
+        // predict can take in an image, video or canvas html element
+        const prediction = await model.predict(webcam.canvas);
+        for (let i = 0; i < maxPredictions; i++) {
+            if (prediction[i].probability.toFixed(2) >= '0.90') {
+                if (data.hasOwnProperty(prediction[i].className)) {
+                    const item = data[prediction[i].className];
+                    labelContainer.innerHTML = `이름: ${item.name}, <br>종목: ${item.subject}`;
+                } else {
+                    console.error(`예측된 클래스 '${prediction[i].className}'에 대한 정보가 'data' 객체에 없습니다.`);
+                }
+            }
+        }
+    }
+</script>
+
+</body>
+</html>
