@@ -54,7 +54,6 @@
         border-radius: 12px;
     }
 </style>
-
 <body>
     <div class="title">제곽 운동 봇</div>
     <div class="subtitle">우리 몸을 평가해봐요</div>
@@ -68,7 +67,7 @@
     // https://github.com/googlecreativelab/teachablemachine-community/tree/master/libraries/image
 
     // the link to your model provided by Teachable Machine export panel
-    const URL = "https://teachablemachine.withgoogle.com/models/BKulQEF74/";
+    const URL = "./my_model/";
 
     let model, webcam, labelContainer, maxPredictions;
     const data =  {
@@ -87,7 +86,6 @@
         }
     };
 
-
     // Load the image model and setup the webcam
     async function init() {
         const modelURL = URL + "model.json";
@@ -102,7 +100,7 @@
 
         // Convenience function to setup a webcam
         const flip = true; // whether to flip the webcam
-        webcam = new tmImage.Webcam(300, 300, flip); // width, height, flip
+        webcam = new tmImage.Webcam(200, 200, flip); // width, height, flip
         await webcam.setup(); // request access to the webcam
         await webcam.play();
         window.requestAnimationFrame(loop);
@@ -121,7 +119,6 @@
         window.requestAnimationFrame(loop);
     }
 
-    // run the webcam image through the image model
     async function predict() {
         // predict can take in an image, video or canvas html element
         const prediction = await model.predict(webcam.canvas);
@@ -137,6 +134,5 @@
         }
     }
 </script>
-
 </body>
 </html>
